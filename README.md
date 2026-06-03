@@ -77,7 +77,7 @@ re-runs only redo what's stale.
 ├── requirements.txt            Python dependencies
 ├── .gitignore
 │
-├── docs-expanded/              PDFs for the broader project set (auto-downloaded; gitignored)
+├── docs-expanded/              Safeguards PDFs for each project (auto-downloaded; gitignored)
 │   └── _manifest.csv           One row per downloaded doc with metadata
 ├── docs-extracted/             Plain-text extracted from every PDF
 │                               (committed — lets CI and replicators run
@@ -104,17 +104,16 @@ re-runs only redo what's stale.
 
 ## How the pipeline works
 
-The pipeline is **uniform across all projects in the universe** — there is no
-separate manual review of "the top 12" and automated review of "the
-rest". Every project is fetched from the WB API, every safeguards
-document is downloaded from the WB Documents API, every PDF is run
+The pipeline applies the same automated treatment to every project in
+the universe: each is fetched from the WB Projects API, each safeguards
+document is downloaded from the WB Documents API, and every PDF is run
 through the same regex-based search and parameter-table extraction.
 
 Steps (Makefile dependencies in parentheses):
 
 | Step | Script | Purpose |
 |---|---|---|
-| 1. universe | `fetch_wb_projects.py` | Query the WB Projects API for active water-sector projects (codes WWC/WWA/WWW) plus 12 legacy-coded projects added by ID. Outputs one CSV with project metadata. |
+| 1. universe | `fetch_wb_projects.py` | Query the WB Projects API for active water-supply projects (sector code WWC) plus 12 legacy-coded projects added by ID. Outputs one CSV with project metadata. |
 | 2. download | `download_wb_documents.py` | For each project, query the WB Documents API and download Project Appraisal Documents, ESIAs, ESMFs, ESCPs, ESSAs, Resettlement Plans, and Stakeholder Engagement Plans. Skips already-present files. |
 | 3. search | `search_pdfs_for_lead.py` | Run context-aware regexes for "lead" as metal vs verb, plus 17 water-quality parameters. Records per-project keyword counts. |
 | 4. tables | `extract_parameter_tables.py` | Score each PDF page for "is this a parameter table"; for high-scoring pages, parse rows into `(parameter, value, unit)` and classify as drinking / effluent / baseline / groundwater / surface. |
