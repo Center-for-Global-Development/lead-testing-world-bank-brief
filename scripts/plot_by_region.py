@@ -25,8 +25,11 @@ SVG = ROOT / "outputs" / "audit" / "projects_by_region.svg"
 SHORT = {
     "Eastern and Southern Africa": "East/Southern Africa",
     "Western and Central Africa":  "West/Central Africa",
-    "Latin America and Caribbean": "LAC",
-    "Middle East, North Africa, Afghanistan, and Pakistan": "MENA + AFG/PAK",
+    "Latin America and Caribbean": "Latin America & Caribbean",
+    # WB's "MENAAP" region — Afghanistan and Pakistan were moved here from
+    # South Asia in 2023. Shortened to "Middle East & N. Africa" for the
+    # chart axis; the AFG/PAK detail is mentioned in the blog text.
+    "Middle East, North Africa, Afghanistan, and Pakistan": "Middle East & N. Africa",
     "Europe and Central Asia":     "Europe & Central Asia",
     "South Asia":                  "South Asia",
     "East Asia and Pacific":       "East Asia & Pacific",
@@ -84,7 +87,7 @@ def main() -> int:
                      reverse=True)
     labels = [SHORT.get(r, r) for r in regions]
 
-    fig, ax = plt.subplots(figsize=(6.5, 4.6))
+    fig, ax = plt.subplots(figsize=(8.0, 4.6))
 
     bottoms = [0.0] * len(regions)
     # Legend labels: IBRD/IDA carry a parenthetical because the acronyms aren't
@@ -100,7 +103,8 @@ def main() -> int:
     ax.invert_yaxis()
     ax.set_xlabel("Water-attributable commitment, $ billion",
                   color=TEAL, fontsize=11)
-    ax.xaxis.set_major_formatter(mtick.FormatStrFormatter("$%.1fB"))
+    # x-axis label already says "$ billion" — keep tick labels as plain numbers
+    ax.xaxis.set_major_formatter(mtick.FormatStrFormatter("%.1f"))
     # Per CGD guide: remove tick marks; keep tick labels (they identify the
     # data) but strip the small marks themselves to reduce non-data ink.
     ax.tick_params(axis="both", length=0, colors=TEAL_BLACK)
@@ -122,34 +126,29 @@ def main() -> int:
     # Extend x-axis a bit so labels fit
     ax.set_xlim(0, max_total * 1.13)
 
-    # Horizontal legend below the x-axis label, mirroring the stacking order
-    # of the bars (left-to-right reads the same as the colour ordering inside
-    # each bar). Anchored below the axes so it doesn't collide with short bars.
+    # Horizontal legend above the chart (between title and bars), mirroring
+    # the stacking order of the bars (left-to-right reads the same as the
+    # colour ordering inside each bar).
     leg = ax.legend(title="Financing type",
-                    loc="upper center", bbox_to_anchor=(0.5, -0.18),
+                    loc="lower center", bbox_to_anchor=(0.5, 1.02),
                     ncol=3, frameon=False, fontsize=9,
                     columnspacing=2.0, handletextpad=0.5)
     leg.get_title().set_color(TEAL)
 
     # Title aligned with the figure's left edge (i.e. with the region labels),
-    # not with the axes' left edge (where the bars start).
-    fig.suptitle("World Bank Active Water-Supply Portfolio:\n"
-                 "water-attributable share by region and financing type",
-                 x=0.01, y=0.99, ha="left", va="top",
-                 fontsize=13, fontweight="bold", color=TEAL)
-    n_total = sum(by_region[r]["n"] for r in regions)
-    audit_total = sum(by_region[r]["audit_total"] for r in regions) / 1e9
-    fig.text(0.5, 0.04,
-             f"{n_total} active projects (WWC = World Bank Water Supply "
-             f"sector code). Bars show the water-attributable share of each "
-             f"project's commitment, summing to ${audit_total:.1f}B.",
-             ha="center", fontsize=8.5, style="italic", color=TEAL_BLACK)
-    fig.text(0.5, 0.005,
-             "IBRD = market-rate loan;  "
-             "IDA = concessional credit;  "
-             "Grant = no repayment.",
-             ha="center", fontsize=8.5, style="italic", color=TEAL_BLACK)
-    fig.tight_layout(rect=(0, 0.14, 1, 0.88))
+    # not with the axes' left edge (where the bars start). Anchored just above
+    # the axes via a small pad so the gap stays tight.
+    ax.text(0.0, 1.0,
+            "World Bank Active Water-Supply Portfolio:\n"
+            "Share by region and financing type",
+            transform=fig.transFigure, ha="left", va="top",
+            fontsize=13, fontweight="bold", color=TEAL)
+    # No footnote — the descriptive caption is added downstream of the figure.
+    fig.tight_layout(rect=(0, 0.0, 1, 0.92))
+    # Pull the axes up but leave room above for the horizontal legend that
+    # sits between title and chart.
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width, 0.80 - pos.y0])
 
     fig.savefig(PNG, dpi=200, bbox_inches="tight")
     fig.savefig(SVG, bbox_inches="tight")
