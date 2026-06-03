@@ -87,10 +87,13 @@ def main() -> int:
     fig, ax = plt.subplots(figsize=(6.5, 4.6))
 
     bottoms = [0.0] * len(regions)
+    # Legend labels: IBRD/IDA carry a parenthetical because the acronyms aren't
+    # self-explanatory; Grant stands on its own.
+    LEGEND = {"IBRD": "IBRD (loan)", "IDA": "IDA (credit)", "Grant": "Grant"}
     for kind in ["IBRD", "IDA", "Grant"]:
         heights = [by_region[r][kind] / 1e9 for r in regions]
         ax.barh(labels, heights, left=bottoms, color=COLORS[kind],
-                label=f"{kind} ({'loan' if kind=='IBRD' else 'credit' if kind=='IDA' else 'grant'})",
+                label=LEGEND[kind],
                 edgecolor="white", linewidth=0.6)
         bottoms = [b + h for b, h in zip(bottoms, heights)]
 
@@ -98,7 +101,9 @@ def main() -> int:
     ax.set_xlabel("Water-attributable commitment, $ billion",
                   color=TEAL, fontsize=11)
     ax.xaxis.set_major_formatter(mtick.FormatStrFormatter("$%.1fB"))
-    ax.tick_params(colors=TEAL_BLACK)
+    # Per CGD guide: remove tick marks; keep tick labels (they identify the
+    # data) but strip the small marks themselves to reduce non-data ink.
+    ax.tick_params(axis="both", length=0, colors=TEAL_BLACK)
     # Per CGD guide: avoid grids unless needed for clarity.
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -117,28 +122,34 @@ def main() -> int:
     # Extend x-axis a bit so labels fit
     ax.set_xlim(0, max_total * 1.13)
 
-    leg = ax.legend(title="Financing Type", loc="lower right",
-                    frameon=False, fontsize=9)
+    # Horizontal legend below the x-axis label, mirroring the stacking order
+    # of the bars (left-to-right reads the same as the colour ordering inside
+    # each bar). Anchored below the axes so it doesn't collide with short bars.
+    leg = ax.legend(title="Financing type",
+                    loc="upper center", bbox_to_anchor=(0.5, -0.18),
+                    ncol=3, frameon=False, fontsize=9,
+                    columnspacing=2.0, handletextpad=0.5)
     leg.get_title().set_color(TEAL)
 
-    # Title aligned top-left per CGD guide
-    ax.set_title("WB Active Water-Supply Portfolio:\n"
+    # Title aligned with the figure's left edge (i.e. with the region labels),
+    # not with the axes' left edge (where the bars start).
+    fig.suptitle("World Bank Active Water-Supply Portfolio:\n"
                  "water-attributable share by region and financing type",
-                 loc="left", fontsize=13, fontweight="bold", color=TEAL,
-                 pad=14)
+                 x=0.01, y=0.99, ha="left", va="top",
+                 fontsize=13, fontweight="bold", color=TEAL)
     n_total = sum(by_region[r]["n"] for r in regions)
     audit_total = sum(by_region[r]["audit_total"] for r in regions) / 1e9
     fig.text(0.5, 0.04,
-             f"{n_total} active projects (WWC sector code). Bars show the "
-             f"water-attributable share of each project's commitment, "
-             f"summing to ${audit_total:.1f}B.",
+             f"{n_total} active projects (WWC = World Bank Water Supply "
+             f"sector code). Bars show the water-attributable share of each "
+             f"project's commitment, summing to ${audit_total:.1f}B.",
              ha="center", fontsize=8.5, style="italic", color=TEAL_BLACK)
     fig.text(0.5, 0.005,
              "IBRD = market-rate loan;  "
              "IDA = concessional credit;  "
              "Grant = no repayment.",
              ha="center", fontsize=8.5, style="italic", color=TEAL_BLACK)
-    fig.tight_layout(rect=(0, 0.06, 1, 0.96))
+    fig.tight_layout(rect=(0, 0.14, 1, 0.88))
 
     fig.savefig(PNG, dpi=200, bbox_inches="tight")
     fig.savefig(SVG, bbox_inches="tight")
