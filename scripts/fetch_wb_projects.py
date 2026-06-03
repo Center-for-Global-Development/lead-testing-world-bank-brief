@@ -2,9 +2,9 @@
 """
 Fetch active World Bank water-supply projects from the WB Projects API.
 
-Reproduces (as closely as possible) the universe behind the blog claim of
-"151 active water supply projects worth approximately $26 billion", and
-writes a CSV comparable to world_bank_water_projects.csv.
+Default universe: active projects tagged with the modern Water Supply
+sector code (WWC), plus 12 legacy-coded projects added by ID
+(`LEGACY_IDS` in the Makefile). Writes outputs/universe/world_bank_water_projects.csv.
 
 API docs: https://search.worldbank.org/api/v3/projects
 
@@ -18,26 +18,17 @@ Sector codes:
   WWW = Water Resources (dams, flood/drought, irrigation — NOT drinking water)
   WWF = Public Administration - Water / Sanitation / Solid Waste
 
-Modes (project counts include the 12 legacy-coded manual additions
-in `LEGACY_IDS`, set in the Makefile):
+Optional modes for sensitivity analysis (counts include the 12 legacy
+manual additions):
 
-  default                     -> Active + WWC only (~65 from API + 12
-                                 manual = ~77-81 projects)
-                                 The drinking-water-supply universe — strictest
-                                 defensible filter for a piece about lead in
-                                 drinking water.
-  --include-sanitation        -> WWC + WWA (~80 from API + 12 manual
-                                 = ~92-95 projects). Adds sanitation,
-                                 matching the WB's own "water supply
-                                 portfolio" definition.
-  --include-water-resources   -> WWC + WWA + WWW (~130 from API + 12
-                                 manual = ~140-145 projects). Adds dams,
-                                 flood, irrigation. NOT recommended for
-                                 drinking-water work.
+  default                     -> WWC only, Active (~81 projects). Used
+                                 by the blog headline.
+  --include-sanitation        -> + WWA. Widens to sanitation projects.
+  --include-water-resources   -> + WWW. Adds dams, flood, irrigation.
+                                 NOT recommended for drinking-water work.
   --widest                    -> also adds WWF (public admin).
 
-`--broad` is retained as an alias of `--include-water-resources` for
-backward compatibility with earlier blog drafts.
+`--broad` is retained as a deprecated alias of `--include-water-resources`.
 
 Usage:
   python3 fetch_wb_projects.py                          # WWC only (default)

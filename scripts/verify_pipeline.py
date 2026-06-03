@@ -38,10 +38,8 @@ EXPECTED = {
     #     where it doesn't. This is the figure used in the audit and blog
     #     headline.
     #
-    # WB's internal "water supply portfolio" figure of $8.7B / 105
-    # projects uses a slightly broader universe (WWC + WWA) and the
-    # Bank's own weighting. Headline findings (zero confirmed
-    # drinking-water lead testing) hold at any of these denominators.
+    # Headline finding (zero confirmed drinking-water lead testing) is
+    # robust to the denominator chosen.
     "min_projects":              55,
     "max_projects":              95,
     "min_commitment_usd":     10_000_000_000,  # unweighted total
